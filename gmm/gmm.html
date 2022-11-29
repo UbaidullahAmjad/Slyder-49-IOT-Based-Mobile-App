@@ -1,0 +1,59 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>tBox CANMATIC.DE</title>
+    <script type="text/javascript" src="gmm_mqtt.js"></script>
+    <script type="text/javascript">
+        var tboxServer = "canmatic.de";
+        var tboxPort = 1884;
+		var tboxTopic="boat/control";
+        var varClient = new Paho.MQTT.Client(tboxServer,
+		Number(tboxPort),"GMM  - Control");
+        varClient.onMessageArrived = onMessageArrived;
+        
+		varClient.connect({ onSuccess: onConnect});
+        function onConnect() { varClient.subscribe(tboxTopic);  }
+        function sendMessage(theMessage) 
+		{
+            if (!varClient) {return;}
+            var varMessage = new Paho.MQTT.Message(theMessage);
+            varMessage.destinationName = tboxTopic;
+            varClient.send(varMessage);
+        }
+		setTimeout(() => {
+			varClient.disconnect()
+		}, 30000);
+		function onMessageArrived(theMessage) 
+		{
+		
+			// alert(JSON.stringify(theMessage))
+            addRowToRecTable(theMessage.destinationName,theMessage.payloadString);
+        }
+		function addRowToRecTable(valTopic,valMessage)
+		{
+			var varDte=new Date();
+			var varTime=varDte.getHours() + ":" + varDte.getMinutes() + ":" + varDte.getSeconds();
+			var recTable=document.getElementById("myReceivedMsg");
+			var r=recTable.insertRow(0);
+			var c1=r.insertCell(0);
+			var c2=r.insertCell(1);
+			var c3=r.insertCell(2);
+			c1.innerHTML=varTime;
+			c2.innerHTML=valTopic;
+			c3.innerHTML=valMessage;
+			
+		}
+    </script>
+</head>
+
+<body>
+	<input type="text" id="textToSend"></input>
+    <button onclick="sendMessage(document.getElementById('textToSend').value)">Send the text</button>
+	<br>
+	<p>Following the received messages : </p>
+	<table id="myReceivedMsg" border=1>
+	</table>
+	
+</body>
+
+</html>
